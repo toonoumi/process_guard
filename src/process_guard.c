@@ -76,6 +76,7 @@ int guarded_task(char*task){
         pthread_create(&tid,NULL,task_thread,task);
         pthread_join(tid, NULL);
         puts("Task joined.");
+        msleep(500);
     }
     pthread_kill(tid_w, 0);
     puts("Watcher killed.");
