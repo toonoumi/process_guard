@@ -8,6 +8,7 @@ Author: Jason Lu
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include "util.h"
 
 int fds[2];
 int task_completed = 0;
@@ -34,14 +35,14 @@ void *task_thread(void*task){
         task_completed = 1;
         puts("Error Code -1.");
     }
-        
+    return NULL;    
 }
 
 void *task_watcher(void*arg){
     pthread_t tid=*(pthread_t*)arg;
-       //loop to see its parent process
-    while(getppid()>2){
-        sleep(1);
+    //loop to watch its parent process
+    while(getppid()>2){ //while parent process exist
+        msleep(100);
         //printf("Parent PID:%d\n",getppid());
         if(task_completed){
             //puts("Task safely exited.");
@@ -50,12 +51,13 @@ void *task_watcher(void*arg){
     }
        //parent process is killed
     
-    puts("parent process is killed...self become host.");
-    pthread_kill(&tid,0);
+    puts("Guard parent process is killed...self become host.");
+    pthread_kill(tid, 0);
     
     close(fds[1]);
     close(fds[0]);
     fork_n_run();
+    return NULL;
 }
 
 int guarded_task(char*task){
@@ -69,11 +71,13 @@ int guarded_task(char*task){
     pthread_join(tid, NULL);
     puts("Task joined.");
     //task ended
-    while(!task_completed){
+    while(!task_completed){ //while task ended by SIGTERM, SIGKILL
+        puts("Task ended unexpectly, restarting task.");
         pthread_create(&tid,NULL,task_thread,task);
         pthread_join(tid, NULL);
+        puts("Task joined.");
     }
-    pthread_kill(tid_w, NULL);
+    pthread_kill(tid_w, 0);
     puts("Watcher killed.");
     if(task_completed){
             puts("Task safely exited.");
@@ -87,7 +91,7 @@ int fork_n_run(){
     pipe(fds);
     int result = fork();
 
-    if(result == 0){
+    if(result == 0){  //if is child
         puts("forked.");
         int rst=guarded_task(line);
         printf("Task exited with code: %d\n",rst);
@@ -95,7 +99,7 @@ int fork_n_run(){
             puts("restarting self as host.");
         }
     }
-    if(result < 0)
+    if(result < 0) //fail to fork
     {
         puts("Fail to fork.");
         exit(1);
@@ -107,7 +111,7 @@ int fork_n_run(){
         waitpid(-1, &status, 0);
         if(!WIFEXITED(status))
         {
-            puts("restarting...");
+            puts("Guard child process restarting...");
             result = fork();
             if(result == 0)
                 guarded_task(line);
@@ -127,7 +131,7 @@ int main(int argc, char**argv){
     pipe(fds);
 
     if (argc < 2) {
-        printf("Usage: %s <task_command>",argv[0]);
+        printf("Usage: %s <task_command>\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n",argv[0]);
         exit(0);
     }
     for(int i=1;i<argc;i++){
