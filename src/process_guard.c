@@ -13,6 +13,7 @@ Author: Jason Lu
 int fds[2];
 int task_completed = 0;
 char line[3000] = "";
+int force_restart=0;
 
 int fork_n_run();
 
@@ -71,7 +72,7 @@ int guarded_task(char*task){
     pthread_join(tid, NULL);
     puts("Task joined.");
     //task ended
-    while(!task_completed){ //while task ended by SIGTERM, SIGKILL
+    while(!task_completed || force_restart){ //while task ended by SIGTERM, SIGKILL
         puts("Task ended unexpectly, restarting task.");
         pthread_create(&tid,NULL,task_thread,task);
         pthread_join(tid, NULL);
@@ -130,12 +131,21 @@ int main(int argc, char**argv){
     
     line[0]=0;
     pipe(fds);
-
+    int command_start_num=1;
     if (argc < 2) {
-        printf("Usage: %s <task_command>\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n",argv[0]);
+        printf("Usage: %s <-f> <task_command>\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n",argv[0]);
         exit(0);
+    }else{
+        if (strcmp(argv[1],"-f")==0){
+            if(argc<3){
+                printf("Usage: %s <-f> <task_command>\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n",argv[0]);
+                exit(0);
+            }
+            command_start_num=2;
+            force_restart=1;
+        }
     }
-    for(int i=1;i<argc;i++){
+    for(int i=command_start_num;i<argc;i++){
        strcat(line,argv[i]);
        strcat(line," ");
     }
