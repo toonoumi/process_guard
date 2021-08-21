@@ -15,6 +15,8 @@ The executable is called pguard.
 
 `./pguard [-f] <COMMAND> [<ARGV>]`
 
+Note: please use full path for command.
+
 ## Notice
 
 pguad does not work well with commands that takes stdin as its input, since killing process breaks the pipe.
