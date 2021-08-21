@@ -8,6 +8,7 @@ Author: Jason Lu
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include "logger.h"
 #include "util.h"
 
 int fds[2];
@@ -23,18 +24,18 @@ void *task_thread(void*task){
     //printf("%d\n",rst);
     if(rst==0){
         task_completed = 1;
-        puts("Task completed.");
+        logger("Task Completed");
     }else if (rst==2){
         task_completed = 1;
-        puts("Task runner can't find file or directory.");
+        logger("Task runner can't find file or directory.");
     }
     else if (rst==1){
         task_completed = 1;
-        puts("Error Code 1.");
+        logger("Error Code 1.");
     }
     else if (rst==256){
         task_completed = 1;
-        puts("Error Code -1.");
+        logger("Error Code -1.");
     }
     return NULL;    
 }
@@ -52,7 +53,7 @@ void *task_watcher(void*arg){
     }
        //parent process is killed
     
-    puts("Guard parent process is killed...self become host.");
+    logger("Guard parent process is killed...self becoming host");
     pthread_kill(tid, 0);
     
     close(fds[1]);
@@ -70,19 +71,19 @@ int guarded_task(char*task){
     pthread_create(&tid_w,NULL,task_watcher,&tid);
 
     pthread_join(tid, NULL);
-    puts("Task joined.");
+    logger("Task Joined");
     //task ended
     while(!task_completed || force_restart){ //while task ended by SIGTERM, SIGKILL
-        puts("Task ended unexpectly, restarting task.");
+        logger("Task Ended Unexpectly: restarting task");
         pthread_create(&tid,NULL,task_thread,task);
         pthread_join(tid, NULL);
-        puts("Task joined.");
+        logger("Task Joined");
         msleep(500);
     }
     pthread_kill(tid_w, 0);
-    puts("Watcher killed.");
+    logger("Watcher killed");
     if(task_completed){
-            puts("Task safely exited.");
+            logger("Task safely exited");
             return 0;
     }
  
@@ -94,16 +95,17 @@ int fork_n_run(){
     int result = fork();
 
     if(result == 0){  //if is child
-        puts("forked.");
+        //puts("forked.");
+        logger("Forked");
         int rst=guarded_task(line);
-        printf("Task exited with code: %d\n",rst);
+        logger("Task Exited with Code: %d\n",rst);
         if(rst==-1){
             puts("restarting self as host.");
         }
     }
     if(result < 0) //fail to fork
     {
-        puts("Fail to fork.");
+        logger("Fail To Fork");
         exit(1);
     }
 
@@ -113,13 +115,13 @@ int fork_n_run(){
         waitpid(-1, &status, 0);
         if(!WIFEXITED(status))
         {
-            puts("Guard child process restarting...");
+            logger("Guard child process restarting...");
             result = fork();
             if(result == 0)
                 guarded_task(line);
             if(result < 0)
             {
-                puts("Crashed and cannot restart. Exiting...");
+                logger("Crashed and cannot restart. Exiting...");
                 exit(1);
             }
         }
