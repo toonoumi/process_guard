@@ -25,4 +25,4 @@ extern char* time_now(){
 #define FMT_STR "%s \033[0;31m[INFO]\033[0m "
 #define FUNC_DETAIL time_now()
 #endif
-#define logger(fmt, ...) fprintf(stderr, FMT_STR fmt "\n", FUNC_DETAIL, ##__VA_ARGS__)
+#define logger(fmt, ...) fprintf(stdout, FMT_STR fmt "\n", FUNC_DETAIL, ##__VA_ARGS__)
