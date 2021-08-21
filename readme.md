@@ -13,7 +13,7 @@ The executable is called pguard.
 
 ## Usage
 
-./pguard \[-f\] \<COMMAND\> \[\<ARGV\> \]
+`./pguard \[-f\] \<COMMAND\> \[\<ARGV\> \]`
 
 ## Notice
 
