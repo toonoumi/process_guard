@@ -135,12 +135,12 @@ int main(int argc, char**argv){
     pipe(fds);
     int command_start_num=1;
     if (argc < 2) {
-        printf("Usage: %s <-f> <task_command>\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n",argv[0]);
+        printf("\nUsage: %s <-f> <task_command>\n\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n\n",argv[0]);
         exit(0);
     }else{
         if (strcmp(argv[1],"-f")==0){
             if(argc<3){
-                printf("Usage: %s <-f> <task_command>\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n",argv[0]);
+                printf("\nUsage: %s <-f> <task_command>\n\nTips: \n1.Use full path\n2.Process reads from stdin is not recommended\n\n",argv[0]);
                 exit(0);
             }
             command_start_num=2;
